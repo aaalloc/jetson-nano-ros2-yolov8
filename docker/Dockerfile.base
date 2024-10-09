@@ -1,0 +1,54 @@
+FROM nvcr.io/nvidia/l4t-cuda:10.2.460-runtime as cuda-dep
+FROM timongentzsch/l4t-ubuntu20-pytorch
+
+ENV ROS_DISTRO=iron
+ENV ROS_PACKAGE=ros_base
+ENV ROS_ROOT=/opt/ros/${ROS_DISTRO}
+ENV ROS_PYTHON_VERSION=3
+ENV ROS_WORKSPACE=/home/ros_ws
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV SHELL /bin/bash
+SHELL ["/bin/bash", "-c"] 
+
+
+RUN pip install --upgrade pip
+RUN rm -fr /usr/local/lib/python3.8/dist-packages/cv2 
+COPY --from=cuda-dep /usr/local/cuda /usr/local/cuda-10.2
+
+RUN mkdir -p ${ROS_WORKSPACE}/src
+WORKDIR ${ROS_WORKSPACE}
+
+# change the locale from POSIX to UTF-8
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends locales \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+RUN locale-gen en_US en_US.UTF-8 && update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
+RUN apt-get install locales -y
+ENV LANG=en_US.UTF-8
+ENV PYTHONIOENCODING=utf-8
+
+COPY docker/utils/ros2_build.sh ${ROS_WORKSPACE}/ros2_build.sh
+RUN chmod +x ${ROS_WORKSPACE}/ros2_build.sh
+RUN /bin/bash -c "${ROS_WORKSPACE}/ros2_build.sh"
+
+
+# https://github.com/ros2/rmw_cyclonedds/issues/273
+#ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+RUN rm ${ROS_WORKSPACE}/ros2_build.sh
+# last dep for rosbrigde
+RUN pip install pymongo tornado
+
+
+# for yolo
+RUN pip install opencv-python==4.7.0.68
+RUN pip install pandas==1.4.3
+# will install correct version of ultralytics for YOLOv8
+# ultralyticsplus will just get us huggingface API interface
+RUN pip install ultralyticsplus==0.0.29
+
+# # clean up
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN rm -fr /usr/local/cuda-10.2
