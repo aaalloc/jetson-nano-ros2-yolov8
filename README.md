@@ -9,6 +9,8 @@ A Dockerfile that builds a Docker image for Nvidia Jetson Nano containing
 
 # Why ?
 Because [dusty-nv/jetson-containers](https://github.com/dusty-nv/jetson-containers) doesn't have a build solution for ROS2 Iron and having Yolov8 running on the GPU.
+Nvidia Jetson Nano is stucked with Jetpack 4.6, which is stuck with Ubuntu 18.04, there is then no possibility to have an according Yolov8 version working 
+with GPU inferences.
 
 # Build
 ```
