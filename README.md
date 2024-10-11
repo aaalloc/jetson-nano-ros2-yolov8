@@ -14,7 +14,7 @@ with GPU inferences.
 
 # Build
 ```
-docker build --platform arm64 -t <your-registry> -f Dockerfile.base .
+docker build --platform arm64 -t <your-registry> -f docker/Dockerfile.base .
 ```
 
 # Acknowledgment
